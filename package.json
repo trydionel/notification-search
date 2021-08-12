@@ -1,0 +1,31 @@
+{
+  "name": "trydionel.notification-manager",
+  "description": "Notification Manager",
+  "version": "0.0.0",
+  "author": "trydionel",
+  "repository": {
+    "type": "git",
+    "url": "TODO: Add the GitHub URL to your extension in package.json"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^16.8.0"
+  },
+  "ahaExtension": {
+    "cspSources": [
+      "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    ],
+    "contributes": {
+      "views": {
+        "search": {
+          "title": "Notifications",
+          "entryPoint": "src/views/notifications.tsx",
+          "host": "page",
+          "location": {
+            "menu": "Work"
+          }
+        }
+      }
+    }
+  }
+}
