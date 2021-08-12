@@ -1,11 +1,11 @@
 {
-  "name": "trydionel.notification-manager",
-  "description": "Notification Manager",
-  "version": "0.0.0",
+  "name": "trydionel.notification-search",
+  "description": "Notification Search",
+  "version": "0.0.1",
   "author": "trydionel",
   "repository": {
     "type": "git",
-    "url": "TODO: Add the GitHub URL to your extension in package.json"
+    "url": "https://github.com/trydionel/notification-search"
   },
   "license": "MIT",
   "devDependencies": {
