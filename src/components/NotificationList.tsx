@@ -26,7 +26,7 @@ const NotificationGroupTable = ({ topic, notifications, onRead }) => {
   const unread = notifications.filter(n => !n.read).length;
 
   return (
-    <table className="table mb-6" key={topic.id}>
+    <table className="table is-fullwidth is-hoverable mb-6" key={topic.id}>
       <thead>
         <tr>
           <td onClick={() => setCollapsed(!isCollapsed)} width={16}>
@@ -38,7 +38,7 @@ const NotificationGroupTable = ({ topic, notifications, onRead }) => {
               <span className={ unread > 0 ? 'tag is-rounded is-info ml-2' : 'tag is-rounded ml-2'}>{ unread } unread</span>
             </div>
             <div className="subtitle is-7">
-              <span className="mr-2">{topic.project.name}</span>
+              <span className="mr-2">{topic.project?.name}</span>
               <a href={topic.path} target="_blank">{topic.referenceNum}</a>
             </div>
           </td>

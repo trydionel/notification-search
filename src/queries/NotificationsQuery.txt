@@ -1,0 +1,50 @@
+{
+  notifications(filters: {type: Comment}, order: {direction: ASC, name: createdAt}, per: 100) {
+    nodes {
+      id
+      project {
+        id
+        name
+      }
+      notifiable {
+        ... on Comment {
+          __typename
+          id
+          body
+          user {
+            id
+            name
+            avatarUrl
+          }
+          commentable {
+            ... on Feature {
+              id
+              referenceNum
+              name
+              path
+              project {
+                name
+              }
+            }
+            ... on Requirement {
+              id
+              referenceNum
+              name
+              path
+              project {
+                name
+              }
+            }
+            ... on Task {
+              id
+              name
+              path
+            }
+          }
+        }
+      }
+      createdAt
+      read
+    }
+  }
+}

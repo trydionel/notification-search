@@ -1,82 +1,63 @@
 import React, { useEffect, useRef, useState } from "react";
-import { NotificationList } from "../components/NotificationList";
-import FlexSearch from 'https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.2/dist/flexsearch.bundle.js';
+import FlexSearch from "https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.2/dist/flexsearch.bundle.js";
 
-const notificationsQuery = `{
-  notifications(filters: {type: Comment}, order: {direction: ASC, name: createdAt}, per: 100) {
-    nodes {
-      id
-      notifiable {
-        ... on Comment {
-          __typename
-          id
-          body
-          user {
-            id
-            name
-            avatarUrl
-          }
-          commentable {
-            ... on Feature {
-              id
-              referenceNum
-              name
-              path
-              project {
-                name
-              }
-            }
-          }
-        }
-      }
-      createdAt
-      read
-    }
-  }
-}`
+import NotificationsQuery from "../queries/NotificationsQuery.txt";
+
+import { NotificationList } from "../components/NotificationList";
+import { NotificationFilters } from "../components/NotificationFilters";
 
 const processNotifications = (input) => {
   const notifications = {};
   const topics = {};
+  const projects = {};
 
   input.forEach((notification) => {
-    const key = notification.notifiable?.commentable?.id || 0;
+    const topicId = notification.notifiable?.commentable?.id || 0;
+    const projectId = notification.project?.id || 0;
 
-    notifications[key] ??= []
-    notifications[key].push(notification)
+    notifications[topicId] ??= []
+    notifications[topicId].push(notification)
     
-    topics[key] ??= []
-    topics[key] = notification.notifiable?.commentable;
+    topics[topicId] ??= []
+    topics[topicId] = notification.notifiable?.commentable;
 
+    projects[projectId] = notification.project.name
   });
 
   return {
     notifications,
     topics,
+    projects
   }
 }
 
-const NotificationFilters = ({ onSearch }) => {
-  return (
-    <>
-      <input type="search" onChange={e => onSearch(e.target.value)} />
-    </>
-  )
+type SearchQuery = {
+  query: string;
+  project?: string | null;
 }
 
 export const NotificationSearch = () => {
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [results, setResults] = useState(null);
-  const [query, setQuery] = useState('');
+  const [search, setSearch] = useState<SearchQuery>({ query: '' });
   const index = useRef(null);
+  const loadNotifications = async () => {
+    const data = await aha.graphQuery(NotificationsQuery);
+    console.log(data)
+    setData(data);
+  }
+
+  const markRead = (notifications) => {
+    notifications.forEach(notification => {
+      if (!notification.read) {
+        console.log(`/notifications/${notification.id}/toggle_read`)
+      }
+    })
+  }
 
   // Load initial data
   useEffect(() => {
-    const loadNotifications = async () => {
-      const data = await aha.graphQuery(notificationsQuery);
-      setData(data);
-    }
-
     loadNotifications();
   }, []);
 
@@ -95,32 +76,30 @@ export const NotificationSearch = () => {
     // Perform initial processing of data
     const results = processNotifications(data?.notifications?.nodes || []);
     setResults(results);
+    setLoading(false);
   }, [data]);
 
 
-  // Update results when query changes
+  // Update results when search changes
   useEffect(() => {
     if (!data) return;
 
-    let notifications;
-    if (query) {
-      const hits = index.current.search(query);
-      notifications = data.notifications.nodes.filter(n => hits.indexOf(+n.id) > -1);
-    } else {
-      notifications = data.notifications.nodes;
+    let notifications = data.notifications.nodes;
+    if (search.project) {
+      notifications = notifications.filter(n => n.project.id === search.project)
     }
-    const results = processNotifications(notifications);
 
-    setResults(results)
-  }, [query]);
+    if (search.query) {
+      const hits = index.current.search(search.query);
+      notifications = notifications.filter(n => hits.indexOf(+n.id) > -1);
+    }
+    const updated = processNotifications(notifications);
 
-  const onRead = (notifications) => {
-    notifications.forEach(notification => {
-      if (!notification.read) {
-        console.log(`/notifications/${notification.id}/toggle_read`)
-      }
+    setResults({
+      ...updated,
+      projects: results.projects // preserve full list of projects
     })
-  }
+  }, [search]);
 
   if (!results) {
     return <div>Loading...</div>;
@@ -128,8 +107,8 @@ export const NotificationSearch = () => {
 
   return (
     <>
-      <NotificationFilters onSearch={setQuery} />
-      <NotificationList results={results} onRead={onRead} />
+      <NotificationFilters isLoading={loading} projects={results.projects} onSearch={s => setSearch(s)} onRefresh={loadNotifications} />
+      <NotificationList results={results} onRead={markRead} />
     </>
   )
 }

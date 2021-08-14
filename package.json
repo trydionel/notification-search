@@ -9,17 +9,19 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/react": "^16.8.0"
+    "@types/react": "^16.8.0",
+    "aha-cli": "^1.11.0"
   },
   "ahaExtension": {
     "cspSources": [
-      "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+      "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css",
+      "https://cdn.skypack.dev/*"
     ],
     "contributes": {
       "views": {
         "search": {
           "title": "Notifications",
-          "entryPoint": "src/views/notifications.tsx",
+          "entryPoint": "src/views/SearchView.tsx",
           "host": "page",
           "location": {
             "menu": "Work"
