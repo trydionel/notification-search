@@ -6,6 +6,8 @@ export const NotificationFilters = ({ isLoading, projects, onSearch, onRefresh }
   const projectRef = useRef();
 
   const onChange = () => {
+    if (!queryRef || !projectRef) return
+
     onSearch({
       query: queryRef.current?.value,
       project: projectRef.current?.value || null

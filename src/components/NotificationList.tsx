@@ -38,8 +38,8 @@ const NotificationGroupTable = ({ topic, notifications, onRead }) => {
               <span className={ unread > 0 ? 'tag is-rounded is-info ml-2' : 'tag is-rounded ml-2'}>{ unread } unread</span>
             </div>
             <div className="subtitle is-7">
-              <span className="mr-2">{topic.project?.name}</span>
-              <a href={topic.path} target="_blank">{topic.referenceNum}</a>
+              <span className="mr-2">{notifications[0].project.name}</span>
+              <a onClick={e => aha.drawer.showRecord(topic)}>{topic.referenceNum || `View ${topic.__typename}`}</a>
             </div>
           </td>
           <td className="has-text-right">
