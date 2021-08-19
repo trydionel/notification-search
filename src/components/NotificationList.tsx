@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { parseISO, format } from 'https://cdn.skypack.dev/date-fns';
 
 const CommentNotificationRow = ({ notification }) => (
   <tr>
@@ -16,7 +17,7 @@ const CommentNotificationRow = ({ notification }) => (
       <div className="content" dangerouslySetInnerHTML={{ __html: notification.notifiable.body }} />
     </td>
     <td className="has-text-right" width="192">
-      { notification.createdAt }
+      { format(parseISO(notification.createdAt), 'PPpp') }
     </td>
   </tr>
 )
