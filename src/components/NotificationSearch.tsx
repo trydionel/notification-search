@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import FlexSearch from "https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.2/dist/flexsearch.bundle.js";
 
-import NotificationsQuery from "../queries/NotificationsQuery.txt";
-
+import { ToastProvider } from "../lib/toasts";
 import { NotificationList } from "../components/NotificationList";
 import { NotificationFilters } from "../components/NotificationFilters";
+import { markRead } from "../actions/markRead";
+import { toggleStarred } from "../actions/toggleStarred";
+import { fetchNotifications } from "../actions/fetchNotifications";
+
 
 const processNotifications = (input) => {
   const notifications = {};
@@ -42,18 +45,22 @@ export const NotificationSearch = () => {
   const [results, setResults] = useState(null);
   const [search, setSearch] = useState<SearchQuery>({ query: '' });
   const index = useRef(null);
+
   const loadNotifications = async () => {
-    const data = await aha.graphQuery(NotificationsQuery);
-    console.log(data)
+    const data = await fetchNotifications();
     setData(data);
   }
 
-  const markRead = (notifications) => {
-    notifications.forEach(notification => {
-      if (!notification.read) {
-        console.log(`/notifications/${notification.id}/toggle_read`)
-      }
-    })
+  const onRead = (notifications) => {
+    return markRead(notifications).then(() => {
+      loadNotifications();
+    });
+  }
+
+  const onStarred = (notifications) => {
+    return toggleStarred(notifications).then(() => {
+      loadNotifications();
+    });
   }
 
   // Load initial data
@@ -68,7 +75,7 @@ export const NotificationSearch = () => {
     const newIndex = new FlexSearch.Index("match");
 
     data.notifications.nodes.forEach(notification => {
-      newIndex.add(+notification.id, notification.notifiable.body);
+      newIndex.add(+notification.id, notification.notifiable.commentable.name + ' ' + notification.notifiable.body);
     });
 
     index.current = newIndex;
@@ -107,8 +114,19 @@ export const NotificationSearch = () => {
 
   return (
     <>
-      <NotificationFilters isLoading={loading} projects={results.projects} onSearch={s => setSearch(s)} onRefresh={loadNotifications} />
-      <NotificationList results={results} onRead={markRead} />
+      <ToastProvider>
+        <NotificationFilters
+          isLoading={loading}
+          projects={results.projects}
+          onSearch={s => setSearch(s)}
+          onRefresh={loadNotifications}
+        />
+        <NotificationList
+          results={results}
+          onRead={onRead}
+          onStarred={onStarred}
+        />
+      </ToastProvider>
     </>
   )
 }

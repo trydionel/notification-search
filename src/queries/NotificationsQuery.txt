@@ -1,5 +1,5 @@
 {
-  notifications(filters: {type: Comment}, order: {direction: ASC, name: createdAt}, per: 100) {
+  notifications(filters: {type: Comment}, order: {direction: DESC, name: createdAt}, per: 100) {
     nodes {
       id
       project {
@@ -17,6 +17,15 @@
             avatarUrl
           }
           commentable {
+            ... on Epic {
+              id
+              referenceNum
+              name
+              path
+              project {
+                name
+              }
+            }
             ... on Feature {
               id
               referenceNum
@@ -35,16 +44,27 @@
                 name
               }
             }
+            ... on Release {
+              id
+              referenceNum
+              name
+              path
+            }
             ... on Task {
               id
               name
               path
+            }
+            ... on Unimplemented {
+              id
+              name
             }
           }
         }
       }
       createdAt
       read
+      starred
     }
   }
 }
