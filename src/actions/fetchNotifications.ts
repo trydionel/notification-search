@@ -1,5 +1,11 @@
 import NotificationsQuery from "../queries/NotificationsQuery.txt";
 
-export const fetchNotifications = async () => {
-  return await aha.graphQuery(NotificationsQuery);
+type NotificationsResponse = {
+  notifications: {
+    nodes: [Aha.Notification]
+  }
+}
+
+export const fetchNotifications = () => {
+  return aha.graphQuery<NotificationsResponse>(NotificationsQuery, { variables: {} });
 }

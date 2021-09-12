@@ -7,9 +7,43 @@ import { NotificationFilters } from "../components/NotificationFilters";
 import { markRead } from "../actions/markRead";
 import { toggleStarred } from "../actions/toggleStarred";
 import { fetchNotifications } from "../actions/fetchNotifications";
+import { fetchAnnotationInfo } from "../actions/fetchAnnotationInfo";
 
 
-const processNotifications = (input) => {
+const resolveAnnotations = async (notifications: [Aha.Notification]) => {
+  // Algo:
+  // * Create a list of unique annotation IDs
+  // * Fetch annotation data for each ID
+  // * Backfill notification structure with resolved annotation data
+  //
+  const annotations = notifications.reduce((acc, notification) => {
+    const commentable = notification.notifiable.commentable
+
+    if (commentable.__typename === 'Unimplemented' && commentable.name === 'Annotation::Text') {
+      acc[commentable.id] = notification
+    }
+
+    return acc
+  }, {})
+
+  const requests = Object.keys(annotations).map(annotationId => {
+    const notification = annotations[annotationId];
+    return fetchAnnotationInfo(notification).then(resolvedTopic => {
+      annotations[annotationId] = resolvedTopic;
+    })
+  })
+  await Promise.all(requests)
+
+  notifications.forEach(notification => {
+    const commentable = notification.notifiable.commentable
+    const resolvedTopic = annotations[commentable.id]
+    if (resolvedTopic) {
+      notification.notifiable.commentable = resolvedTopic
+    }
+  });
+}
+
+const groupNotifications = (input) => {
   const notifications = {};
   const topics = {};
   const projects = {};
@@ -34,6 +68,16 @@ const processNotifications = (input) => {
   }
 }
 
+const buildSearchIndex = (notifications: [Aha.Notification]) => {
+  const index = new FlexSearch.Index("match");
+
+  notifications.forEach(notification => {
+    index.add(+notification.id, notification.notifiable.commentable.name + ' ' + notification.notifiable.body);
+  });
+
+  return index;
+}
+
 type SearchQuery = {
   query: string;
   project?: string | null;
@@ -48,6 +92,8 @@ export const NotificationSearch = () => {
 
   const loadNotifications = async () => {
     const data = await fetchNotifications();
+    await resolveAnnotations(data.notifications.nodes);
+
     setData(data);
   }
 
@@ -71,17 +117,11 @@ export const NotificationSearch = () => {
   useEffect(() => {
     if (!data) return;
 
-    // Build search index
-    const newIndex = new FlexSearch.Index("match");
-
-    data.notifications.nodes.forEach(notification => {
-      newIndex.add(+notification.id, notification.notifiable.commentable.name + ' ' + notification.notifiable.body);
-    });
-
-    index.current = newIndex;
+    // Update search index
+    index.current = buildSearchIndex(data.notifications.nodes);
 
     // Perform initial processing of data
-    const results = processNotifications(data?.notifications?.nodes || []);
+    const results = groupNotifications(data?.notifications?.nodes || []);
     setResults(results);
     setLoading(false);
   }, [data]);
@@ -100,7 +140,7 @@ export const NotificationSearch = () => {
       const hits = index.current.search(search.query);
       notifications = notifications.filter(n => hits.indexOf(+n.id) > -1);
     }
-    const updated = processNotifications(notifications);
+    const updated = groupNotifications(notifications);
 
     setResults({
       ...updated,
@@ -109,7 +149,11 @@ export const NotificationSearch = () => {
   }, [search]);
 
   if (!results) {
-    return <div>Loading...</div>;
+    return (
+      <div className="is-flex is-justify-content-center is-align-items-center" style={{minHeight: '50vh'}}>
+        <div className="button is-large is-loading">Loading...</div>
+      </div>
+    )
   }
 
   return (

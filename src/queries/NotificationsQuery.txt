@@ -1,5 +1,5 @@
 {
-  notifications(filters: {type: Comment}, order: {direction: DESC, name: createdAt}, per: 100) {
+  notifications(filters: {type: Comment, read: UNREAD}, order: {direction: DESC, name: createdAt}, per: 100) {
     nodes {
       id
       project {
