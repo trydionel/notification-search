@@ -3,7 +3,7 @@ import FlexSearch from "https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.2
 
 import { ToastProvider } from "../lib/toasts";
 import { NotificationList } from "../components/NotificationList";
-import { NotificationFilters } from "../components/NotificationFilters";
+import { FilterMode, NotificationFilters } from "../components/NotificationFilters";
 import { markRead } from "../actions/markRead";
 import { toggleStarred } from "../actions/toggleStarred";
 import { fetchNotifications } from "../actions/fetchNotifications";
@@ -81,6 +81,7 @@ const buildSearchIndex = (notifications: [Aha.Notification]) => {
 type SearchQuery = {
   query: string;
   project?: string | null;
+  mode: FilterMode;
 }
 
 export const NotificationSearch = () => {
@@ -136,8 +137,12 @@ export const NotificationSearch = () => {
       notifications = notifications.filter(n => n.project.id === search.project)
     }
 
-    if (search.query) {
-      const hits = index.current.search(search.query);
+    if (search.mode === 'starred') {
+      notifications = notifications.filter(n => n.starred)
+    }
+
+    if (search.mode === 'mentions' || search.query) {
+      const hits = index.current.search(`@${aha.user.name} ${search.query}`);
       notifications = notifications.filter(n => hits.indexOf(+n.id) > -1);
     }
     const updated = groupNotifications(notifications);
