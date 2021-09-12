@@ -55,7 +55,7 @@ const CommentNotificationRow = ({ notification, onRead, onStarred }) => {
           <IconButton onClick={() => onStarred(notification)}>
             {notification.starred ? <StarFillIcon /> : <StarIcon />}
           </IconButton>
-          <IconButton onClick={onCreateTodo} disabled={notification.notifiable.commentable.__typename === 'Annotation'}>
+          <IconButton onClick={onCreateTodo}>
             <FileSymlinkFileIcon />
           </IconButton>
         </div>
