@@ -3,10 +3,10 @@ import { SearchIcon, SyncIcon, SunIcon } from 'https://cdn.skypack.dev/@primer/o
 
 export type FilterMode = 'everything' | 'mentions' | 'starred'
 
-export const NotificationFilters = ({ isLoading, projects, onSearch, onRefresh }) => {
+export const NotificationFilters = ({ isLoading, projects, search, onSearch, onRefresh }) => {
   const queryRef = useRef();
   const projectRef = useRef();
-  const [mode, setMode] = useState<FilterMode>('everything');
+  const [mode, setMode] = useState<FilterMode>(search.mode);
 
   const onChange = () => {
     if (!queryRef || !projectRef) return
@@ -30,7 +30,7 @@ export const NotificationFilters = ({ isLoading, projects, onSearch, onRefresh }
   return (
     <div className="field is-grouped mb-6">
       <div className="control is-expanded has-icons-left">
-        <input ref={queryRef} className="input" type="search" placeholder="Search notifications..." onChange={onChange} />
+        <input value={search.query} ref={queryRef} className="input" type="search" placeholder="Search notifications..." onChange={onChange} />
         <span className="icon is-small is-left">
           <SearchIcon />
         </span>
@@ -58,7 +58,7 @@ export const NotificationFilters = ({ isLoading, projects, onSearch, onRefresh }
 
       <div className="control">
         <div className="select">
-          <select ref={projectRef} onChange={onChange}>
+          <select value={search.project} ref={projectRef} onChange={onChange}>
             <option value="">All projects</option>
             { Object.keys(projects).map(projectId => { 
               return <option value={projectId}>{projects[projectId]}</option>

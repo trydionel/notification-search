@@ -20,7 +20,7 @@ export const createTodo = async (notification: Aha.Notification) => {
 
   todo.body = body;
   todo.name = `Follow up on comment from ${commentor}`;
-  todo.dueDate = new Date(); // due today
+  todo.dueDate = (new Date()).toISOString(); // due today
   todo.assignUser(aha.user.id);
 
   return await todo.save();
