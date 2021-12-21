@@ -78,7 +78,7 @@ const groupNotifications = (input) => {
     topics[topicId] ??= []
     topics[topicId] = notification.notifiable?.commentable;
 
-    projects[projectId] = notification.project.name
+    projects[projectId] = notification.project?.name || "None"
   });
 
   return {
