@@ -55,6 +55,18 @@
               name
               path
             }
+            ... on Idea {
+              id
+              referenceNum
+              name
+              path
+            }
+            ... on ProgramIncrement {
+              id
+              referenceNum
+              name
+              path
+            }
             ... on Unimplemented {
               id
               name

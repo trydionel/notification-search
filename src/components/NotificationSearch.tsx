@@ -10,7 +10,10 @@ import { fetchNotifications } from "../actions/fetchNotifications";
 import { fetchAnnotationInfo } from "../actions/fetchAnnotationInfo";
 import { fetchIdeaInfo } from "../actions/fetchIdeaInfo";
 import { fetchPageInfo } from "../actions/fetchPageInfo";
+import { fetchPresentationInfo } from "../actions/fetchPresentationInfo";
 import { EmptyState } from "./EmptyState";
+
+import InboxSVG from '../assets/inbox.svg.txt'
 
 type SearchQuery = {
   query: string;
@@ -22,7 +25,8 @@ const Resolvers = {
   'Annotation::Text': fetchAnnotationInfo,
   'Annotation::Point': fetchAnnotationInfo,
   'Ideas::Idea': fetchIdeaInfo,
-  'Page': fetchPageInfo
+  'Page': fetchPageInfo,
+  'Publish::Notebook': fetchPresentationInfo
 }
 
 const resolveUnimplementedTypes = async (notifications: [Aha.Notification]) => {
@@ -144,11 +148,49 @@ export const NotificationSearch = () => {
     });
   }
 
+  const setFavicon = (notificationCount) => {
+    const link = document.querySelector<HTMLLinkElement>("link[rel*='icon']")
+
+    if (!link) return;
+
+    const fragment = document.createElement('div');
+    fragment.innerHTML = InboxSVG;
+
+    if (notificationCount > 0) {
+      const svgNS = 'http://www.w3.org/2000/svg'
+      const count = document.createElementNS(svgNS, 'circle');
+      count.setAttributeNS(null, 'cx', 416);
+      count.setAttributeNS(null, 'cy', 64);
+      count.setAttributeNS(null, 'r', 64);
+      count.setAttributeNS(null, 'fill', 'red');
+
+      fragment.querySelector('svg').appendChild(count);
+    }
+
+    const favicon = fragment.innerHTML;
+    link.href = `data:image/svg+xml;base64,${btoa(favicon)}`
+  }
+
   // Load initial data
   useEffect(() => {
     loadNotifications();
   }, []);
 
+  // Regularly check for new notifications
+  useEffect(() => {
+    console.log("Registering for notification updates")
+
+    let refreshInterval = 5 * 60 * 1000; // 5 minutes
+    let pollingPid = setInterval(async () => {
+      await loadNotifications();
+    }, refreshInterval)
+
+    return () => {
+      clearInterval(pollingPid);
+    }
+  }, [])
+
+  // Post-process data after loading
   useEffect(() => {
     if (!data) return;
 
@@ -161,6 +203,7 @@ export const NotificationSearch = () => {
     const grouped = groupNotifications(filtered);
     setResults(grouped);
     setLoading(false);
+    setFavicon(notifications.length);
   }, [data]);
 
 
